@@ -18,11 +18,11 @@ type PostgresConfig struct {
 	Password          string        `envconfig:"PASSWORD" default:"postgres"`
 	DBName            string        `envconfig:"DB_NAME" default:"postgres"`
 	SSLMode           string        `envconfig:"SSL_MODE" default:"disable"`
-	/* MinConns          int           `envconfig:"MIN_CONNS" default:"1"`
-	MaxConns          int           `envconfig:"MAX_CONNS" default:"10"`
-	MaxConnTTL        time.Duration `envconfig:"MAX_CONN_TTL" default:"1h"`
-	HealthCheckPeriod time.Duration `envconfig:"HEALTH_CHECK_PERIOD" default:"30s"`
-	PingTimeout       time.Duration `envconfig:"PING_TIMEOUT" default:"5s"` */
+	// MinConns          int           `envconfig:"MIN_CONNS" default:"1"`
+	// MaxConns          int           `envconfig:"MAX_CONNS" default:"10"`
+	// MaxConnTTL        time.Duration `envconfig:"MAX_CONN_TTL" default:"1h"`
+	// HealthCheckPeriod time.Duration `envconfig:"HEALTH_CHECK_PERIOD" default:"30s"`
+	PingTimeout       time.Duration `envconfig:"PING_TIMEOUT" default:"5s"`
 }
 
 type KafkaConfig struct {
