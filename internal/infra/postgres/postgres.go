@@ -60,7 +60,7 @@ func (r *postgresRepo) Close() error {
 
 func (r *postgresRepo) Create(ctx context.Context, order *models.Order) error {
 	logger := r.logger.With(
-		zap.String("op", "Create"),
+		zap.String("op", "postgres.Create"),
 		zap.String("order_uid", order.OrderUID),
 	)
 
@@ -84,7 +84,7 @@ func (r *postgresRepo) Create(ctx context.Context, order *models.Order) error {
 
 func (r *postgresRepo) Read(ctx context.Context, orderUID string) (*models.Order, error) {
 	logger := r.logger.With(
-		zap.String("op", "Read"),
+		zap.String("op", "postgres.Read"),
 		zap.String("order_uid", orderUID),
 	)
 
@@ -113,7 +113,7 @@ func (r *postgresRepo) Read(ctx context.Context, orderUID string) (*models.Order
 
 func (r *postgresRepo) ReadAll(ctx context.Context) ([]*models.Order, error) {
 	logger := r.logger.With(
-		zap.String("op", "ReadAll"),
+		zap.String("op", "postgres.ReadAll"),
 	)
 
 	logger.Info("получение всех заказов из БД...")
