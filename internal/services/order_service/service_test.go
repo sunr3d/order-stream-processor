@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"go.uber.org/zap"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"go.uber.org/zap"
+
 	"github.com/sunr3d/order-stream-processor/internal/services/order_service"
 	"github.com/sunr3d/order-stream-processor/mocks"
 	"github.com/sunr3d/order-stream-processor/models"
@@ -165,7 +165,7 @@ func TestOrderSerivce_GetOrder_NotFound(t *testing.T) {
 
 	svc := order_service.New(repo, cache, logger)
 	ctx := context.Background()
-	
+
 	cache.On("Get", ctx, "test-123").Return((*models.Order)(nil), errors.New("заказ не найден"))
 	repo.On("Read", ctx, "test-123").Return((*models.Order)(nil), errors.New("заказ не найден"))
 
@@ -195,7 +195,7 @@ func TestOrderSerivce_GetAllOrders_OK(t *testing.T) {
 
 	repo.On("ReadAll", ctx).Return(expectedOrders, nil)
 	cache.On("Restore", ctx, expectedOrders).Return(nil)
-	
+
 	orders, err := svc.GetAllOrders(ctx)
 
 	assert.NoError(t, err)
@@ -250,7 +250,7 @@ func TestOrderSerivce_GetAllOrders_Error_Cache(t *testing.T) {
 
 	svc := order_service.New(repo, cache, logger)
 	ctx := context.Background()
-	
+
 	expectedOrders := []*models.Order{
 		createValidOrder(),
 		createValidOrder(),
