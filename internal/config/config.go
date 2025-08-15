@@ -29,4 +29,5 @@ type KafkaConfig struct {
 	Brokers []string `envconfig:"BROKERS" default:"localhost:9092"`
 	Topic   string   `envconfig:"TOPIC" default:"orders"`
 	GroupID string `envconfig:"GROUP_ID" default:"order-processor"`
+	MaxRetries int `envconfig:"MAX_RETRIES" default:"3"`
 }
