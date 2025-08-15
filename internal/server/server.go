@@ -10,14 +10,14 @@ import (
 	"go.uber.org/zap"
 )
 
-type Server struct {
+type server struct {
 	server          *http.Server
 	logger          *zap.Logger
 	shutdownTimeout time.Duration
 }
 
-func New(port string, handler http.Handler, timeout time.Duration, logger *zap.Logger) *Server {
-	return &Server{
+func New(port string, handler http.Handler, timeout time.Duration, logger *zap.Logger) *server {
+	return &server{
 		server: &http.Server{
 			Addr:              ":" + port,
 			Handler:           handler,
@@ -31,7 +31,7 @@ func New(port string, handler http.Handler, timeout time.Duration, logger *zap.L
 	}
 }
 
-func (s *Server) Start(ctx context.Context) error {
+func (s *server) Start(ctx context.Context) error {
 	logger := s.logger.With(
 		zap.String("op", "server.Start"),
 	)
