@@ -19,6 +19,9 @@ logs:
 test:
 	go test -v ./...
 
+test-kafka:
+	./test-kafka.sh
+
 lint:
 	golangci-lint run
 
