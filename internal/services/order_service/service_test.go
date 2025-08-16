@@ -77,6 +77,46 @@ func TestOrderService_ProcessOrder_Duplicate(t *testing.T) {
 	cache.AssertNotCalled(t, "Set")
 }
 
+func TestOrderService_ProcessOrder_Error_Cache(t *testing.T) {
+	repo := &mocks.Database{}
+	cache := &mocks.Cache{}
+	logger := zap.NewNop()
+
+	svc := order_service.New(repo, cache, logger)
+	ctx := context.Background()
+	orderData := createValidOrder()
+
+	repo.On("Read", ctx, "test-123").Return((*models.Order)(nil), nil)
+	repo.On("Create", ctx, mock.AnythingOfType("*models.Order")).Return(errors.New("ошибка"))
+
+	err := svc.ProcessOrder(ctx, orderData)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "repo.Create")
+	repo.AssertExpectations(t)
+	cache.AssertNotCalled(t, "Set")
+}
+
+func TestOrderService_ProcessOrder_Error_DB(t *testing.T) {
+	repo := &mocks.Database{}
+	cache := &mocks.Cache{}
+	logger := zap.NewNop()
+
+	svc := order_service.New(repo, cache, logger)
+	ctx := context.Background()
+	orderData := createValidOrder()
+
+	repo.On("Read", ctx, "test-123").Return((*models.Order)(nil), errors.New("ошибка БД"))
+
+	err := svc.ProcessOrder(ctx, orderData)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "repo.Read")
+	repo.AssertExpectations(t)
+	cache.AssertNotCalled(t, "Set")
+}
+
+
 // GetOrder Tests
 func TestOrderSerivce_GetOrder_OK_FromDB(t *testing.T) {
 	repo := &mocks.Database{}
