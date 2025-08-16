@@ -4,8 +4,8 @@ import (
 	"log"
 
 	"github.com/sunr3d/order-stream-processor/internal/config"
-	"github.com/sunr3d/order-stream-processor/internal/logger"
 	"github.com/sunr3d/order-stream-processor/internal/entrypoint"
+	"github.com/sunr3d/order-stream-processor/internal/logger"
 )
 
 func main() {

@@ -12,18 +12,18 @@ type Config struct {
 }
 
 type PostgresConfig struct {
-	Host              string        `envconfig:"HOST" default:"localhost"`
-	Port              string        `envconfig:"PORT" default:"5432"`
-	User              string        `envconfig:"USER" default:"postgres"`
-	Password          string        `envconfig:"PASSWORD" default:"postgres"`
-	DBName            string        `envconfig:"DB_NAME" default:"postgres"`
-	SSLMode           string        `envconfig:"SSL_MODE" default:"disable"`
-	PingTimeout       time.Duration `envconfig:"PING_TIMEOUT" default:"5s"`
+	Host        string        `envconfig:"HOST" default:"localhost"`
+	Port        string        `envconfig:"PORT" default:"5432"`
+	User        string        `envconfig:"USER" default:"postgres"`
+	Password    string        `envconfig:"PASSWORD" default:"postgres"`
+	DBName      string        `envconfig:"DB_NAME" default:"postgres"`
+	SSLMode     string        `envconfig:"SSL_MODE" default:"disable"`
+	PingTimeout time.Duration `envconfig:"PING_TIMEOUT" default:"5s"`
 }
 
 type KafkaConfig struct {
-	Brokers []string `envconfig:"BROKERS" default:"localhost:9092"`
-	Topic   string   `envconfig:"TOPIC" default:"orders"`
-	GroupID string `envconfig:"GROUP_ID" default:"order-processor"`
-	MaxRetries int `envconfig:"MAX_RETRIES" default:"3"`
+	Brokers    []string `envconfig:"BROKERS" default:"localhost:9092"`
+	Topic      string   `envconfig:"TOPIC" default:"orders"`
+	GroupID    string   `envconfig:"GROUP_ID" default:"order-processor"`
+	MaxRetries int      `envconfig:"MAX_RETRIES" default:"3"`
 }

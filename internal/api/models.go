@@ -6,7 +6,7 @@ type createOrderReq = models.Order
 
 type createOrderResp struct {
 	OrderUID string `json:"order_uid"`
-	Message string `json:"message"`
+	Message  string `json:"message"`
 }
 
 type getOrderResp struct {

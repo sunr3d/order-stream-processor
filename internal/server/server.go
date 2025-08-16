@@ -55,7 +55,7 @@ func (s *server) Start(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
 		logger.Info("получен сигнал завершения")
-		
+
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), s.shutdownTimeout)
 		defer cancel()
 

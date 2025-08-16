@@ -16,9 +16,9 @@ var _ infra.Broker = (*kafkaBroker)(nil)
 
 type kafkaBroker struct {
 	consumers sarama.ConsumerGroup
-	config   config.KafkaConfig
-	handler  func([]byte) error
-	logger   *zap.Logger
+	config    config.KafkaConfig
+	handler   func([]byte) error
+	logger    *zap.Logger
 }
 
 func New(cfg config.KafkaConfig, handler func([]byte) error, logger *zap.Logger) (infra.Broker, error) {
@@ -32,9 +32,9 @@ func New(cfg config.KafkaConfig, handler func([]byte) error, logger *zap.Logger)
 
 	return &kafkaBroker{
 		consumers: consumers,
-		config:   cfg,
-		handler:  handler,
-		logger:   logger,
+		config:    cfg,
+		handler:   handler,
+		logger:    logger,
 	}, nil
 }
 
@@ -44,9 +44,9 @@ func (b *kafkaBroker) Start(ctx context.Context) error {
 	)
 
 	logger.Info("запуск Kafka consumers group",
-	zap.String("group_id", b.config.GroupID),
-	zap.String("topic", b.config.Topic),
-	zap.String("brokers", strings.Join(b.config.Brokers, ", ")),
+		zap.String("group_id", b.config.GroupID),
+		zap.String("topic", b.config.Topic),
+		zap.String("brokers", strings.Join(b.config.Brokers, ", ")),
 	)
 
 	for {
@@ -86,7 +86,7 @@ func (b *kafkaBroker) ConsumeClaim(session sarama.ConsumerGroupSession, claim sa
 	logger := b.logger.With(
 		zap.String("op", "kafka.ConsumeClaim"),
 	)
-	
+
 	for msg := range claim.Messages() {
 		logger.Info("получено сообщение из Kafka",
 			zap.Int32("partition", msg.Partition),
@@ -96,13 +96,13 @@ func (b *kafkaBroker) ConsumeClaim(session sarama.ConsumerGroupSession, claim sa
 
 		for attempt := 1; attempt <= b.config.MaxRetries; attempt++ {
 			if err := b.handler(msg.Value); err != nil {
-				logger.Error("ошибка при обработке сообщения", 
-				zap.Int32("partition", msg.Partition),
-				zap.Int64("offset", msg.Offset),
-				zap.String("key (order_uid)", string(msg.Key)),
-				zap.Int("attempt", attempt),
-				zap.Int("max_retries", b.config.MaxRetries),
-				zap.Error(err),
+				logger.Error("ошибка при обработке сообщения",
+					zap.Int32("partition", msg.Partition),
+					zap.Int64("offset", msg.Offset),
+					zap.String("key (order_uid)", string(msg.Key)),
+					zap.Int("attempt", attempt),
+					zap.Int("max_retries", b.config.MaxRetries),
+					zap.Error(err),
 				)
 
 				if attempt == b.config.MaxRetries {
@@ -119,7 +119,7 @@ func (b *kafkaBroker) ConsumeClaim(session sarama.ConsumerGroupSession, claim sa
 				break
 			}
 		}
-		
+
 		session.MarkMessage(msg, "")
 		logger.Info("сообщение обработано успешно",
 			zap.Int32("partition", msg.Partition),
@@ -131,5 +131,5 @@ func (b *kafkaBroker) ConsumeClaim(session sarama.ConsumerGroupSession, claim sa
 	return nil
 }
 
-func (b *kafkaBroker) Setup(sarama.ConsumerGroupSession) error { return nil }
+func (b *kafkaBroker) Setup(sarama.ConsumerGroupSession) error   { return nil }
 func (b *kafkaBroker) Cleanup(sarama.ConsumerGroupSession) error { return nil }

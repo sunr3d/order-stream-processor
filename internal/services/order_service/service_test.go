@@ -116,7 +116,6 @@ func TestOrderService_ProcessOrder_Error_DB(t *testing.T) {
 	cache.AssertNotCalled(t, "Set")
 }
 
-
 // GetOrder Tests
 func TestOrderSerivce_GetOrder_OK_FromDB(t *testing.T) {
 	repo := &mocks.Database{}
