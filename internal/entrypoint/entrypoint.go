@@ -63,6 +63,14 @@ func Run(cfg *config.Config, logger *zap.Logger) error {
 
 	/// Сервисный слой
 	svc := order_service.New(db, cache, logger)
+	go func() {
+		logger.Info("восстановление кэша заказов...")
+		if _, err := svc.GetAllOrders(appCtx); err != nil {
+			logger.Warn("ошибка восстановления кэша", zap.Error(err))
+		} else {
+			logger.Info("кэш заказов восстановлен")
+		}
+	}()
 
 	/// HTTP слой
 	controller := http_handlers.New(svc, logger)
