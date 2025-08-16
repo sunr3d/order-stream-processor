@@ -3,6 +3,7 @@ package order_service
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"go.uber.org/zap"
 
@@ -35,19 +36,12 @@ func (s *orderService) ProcessOrder(ctx context.Context, order *models.Order) er
 
 	logger.Info("начинаем обработку заказа")
 
-	// Проверка на дубликат в БД
-	exists, err := s.repo.Read(ctx, order.OrderUID)
-	if err != nil {
-		logger.Error("ошибка при чтении заказа из базы данных", zap.Error(err))
-		return fmt.Errorf("repo.Read: %w", err)
-	}
-	if exists != nil {
-		logger.Info("заказ уже существует в базе данных")
-		return fmt.Errorf("заказ уже существует в базе данных")
-	}
-
 	// Сохранение заказа в БД
 	if err := s.repo.Create(ctx, order); err != nil {
+		if strings.Contains(err.Error(), "заказ уже существует") {
+			logger.Info("заказ уже существует в БД")
+			return err
+		}
 		logger.Error("ошибка при сохранении заказа в базе данных", zap.Error(err))
 		return fmt.Errorf("repo.Create: %w", err)
 	}

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	_ "github.com/lib/pq"
 	"go.uber.org/zap"
@@ -74,6 +75,10 @@ func (r *postgresRepo) Create(ctx context.Context, order *models.Order) error {
 
 	_, err = r.db.ExecContext(ctx, queryCreate, order.OrderUID, data)
 	if err != nil {
+		if strings.Contains(err.Error(), "duplicate key") {
+			logger.Info("заказ уже существует в БД")
+			return fmt.Errorf("заказ уже существует в БД: %s", order.OrderUID)
+		}
 		logger.Error("ошибка при сохранении заказа в БД", zap.Error(err))
 		return fmt.Errorf("db.ExecContext: %w", err)
 	}
