@@ -16,7 +16,7 @@ type PostgresConfig struct {
 	Port        string        `envconfig:"PORT" default:"5432"`
 	User        string        `envconfig:"USER" default:"postgres"`
 	Password    string        `envconfig:"PASSWORD" default:"postgres"`
-	DBName      string        `envconfig:"DB_NAME" default:"postgres"`
+	DBName      string        `envconfig:"DB" default:"postgres"`
 	SSLMode     string        `envconfig:"SSL_MODE" default:"disable"`
 	PingTimeout time.Duration `envconfig:"PING_TIMEOUT" default:"5s"`
 }
