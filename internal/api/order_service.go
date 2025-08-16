@@ -37,13 +37,13 @@ func (h *handler) createOrder(w http.ResponseWriter, r *http.Request) {
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&req); err != nil {
 		logger.Error("некорректный JSON", zap.Error(err))
-		httpx.HttpError(w, http.StatusBadRequest, "Некорректный JSON")
+		_ = httpx.HttpError(w, http.StatusBadRequest, "Некорректный JSON")
 		return
 	}
 
 	if err := validateCreateOrderReq(req); err != nil {
 		logger.Error("ошибка валидации запроса", zap.Error(err))
-		httpx.HttpError(w, http.StatusBadRequest, err.Error())
+		_ = httpx.HttpError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -54,9 +54,9 @@ func (h *handler) createOrder(w http.ResponseWriter, r *http.Request) {
 
 		if strings.Contains(err.Error(), "уже существует") {
 			logger.Info("заказ уже существует в БД")
-			httpx.HttpError(w, http.StatusConflict, "Заказ уже существует")
+			_ = httpx.HttpError(w, http.StatusConflict, "Заказ уже существует")
 		} else {
-			httpx.HttpError(w, http.StatusInternalServerError, "Внутреняя ошибка сервера")
+			_ = httpx.HttpError(w, http.StatusInternalServerError, "Внутреняя ошибка сервера")
 		}
 		return
 	}
@@ -70,7 +70,7 @@ func (h *handler) createOrder(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, httpx.ErrJSONMarshal):
 			logger.Error("ошибка при отправке ответа", zap.Error(err))
-			httpx.HttpError(w, http.StatusInternalServerError, "Внутреняя ошибка сервера")
+			_ = httpx.HttpError(w, http.StatusInternalServerError, "Внутреняя ошибка сервера")
 		case errors.Is(err, httpx.ErrWriteBody):
 			logger.Warn("клиент закрыл соединение, ответ не отправлен", zap.Error(err))
 		}
@@ -88,7 +88,7 @@ func (h *handler) getOrder(w http.ResponseWriter, r *http.Request) {
 	orderUID := r.PathValue("order_uid")
 	if orderUID == "" {
 		logger.Error("пустой order_uid")
-		httpx.HttpError(w, http.StatusBadRequest, "order_uid не может быть пустым")
+		_ = httpx.HttpError(w, http.StatusBadRequest, "order_uid не может быть пустым")
 		return
 	}
 	logger = logger.With(zap.String("order_uid", orderUID))
@@ -98,9 +98,9 @@ func (h *handler) getOrder(w http.ResponseWriter, r *http.Request) {
 		logger.Error("ошибка при получении заказа", zap.Error(err))
 
 		if strings.Contains(err.Error(), "заказ не найден") {
-			httpx.HttpError(w, http.StatusNotFound, "Заказ не найден")
+			_ = httpx.HttpError(w, http.StatusNotFound, "Заказ не найден")
 		} else {
-			httpx.HttpError(w, http.StatusInternalServerError, "Внутреняя ошибка сервера")
+			_ = httpx.HttpError(w, http.StatusInternalServerError, "Внутреняя ошибка сервера")
 		}
 		return
 	}
@@ -113,7 +113,7 @@ func (h *handler) getOrder(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, httpx.ErrJSONMarshal):
 			logger.Error("ошибка при отправке ответа", zap.Error(err))
-			httpx.HttpError(w, http.StatusInternalServerError, "Внутреняя ошибка сервера")
+			_ = httpx.HttpError(w, http.StatusInternalServerError, "Внутреняя ошибка сервера")
 		case errors.Is(err, httpx.ErrWriteBody):
 			logger.Warn("клиент закрыл соединение, ответ не отправлен", zap.Error(err))
 		}
