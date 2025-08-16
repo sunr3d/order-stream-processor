@@ -2,7 +2,6 @@ package order_service_test
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"testing"
 	"time"
@@ -37,12 +36,6 @@ func createValidOrder() *models.Order {
 	}
 }
 
-func createOrderJSON() []byte {
-	order := createValidOrder()
-	jsonData, _ := json.Marshal(order)
-	return jsonData
-}
-
 // ProcessOrder Tests
 func TestOrderService_ProcessOrder_OK(t *testing.T) {
 	repo := &mocks.Database{}
@@ -51,7 +44,7 @@ func TestOrderService_ProcessOrder_OK(t *testing.T) {
 
 	svc := order_service.New(repo, cache, logger)
 	ctx := context.Background()
-	orderData := createOrderJSON()
+	orderData := createValidOrder()
 
 	repo.On("Read", ctx, "test-123").Return((*models.Order)(nil), nil)
 	repo.On("Create", ctx, mock.AnythingOfType("*models.Order")).Return(nil)
@@ -64,39 +57,6 @@ func TestOrderService_ProcessOrder_OK(t *testing.T) {
 	cache.AssertExpectations(t)
 }
 
-func TestOrderService_ProcessOrder_InvalidJSON1(t *testing.T) {
-	repo := &mocks.Database{}
-	cache := &mocks.Cache{}
-	logger := zap.NewNop()
-
-	svc := order_service.New(repo, cache, logger)
-	ctx := context.Background()
-	invalidData := []byte(`{"invalid": "json"}`)
-
-	err := svc.ProcessOrder(ctx, invalidData)
-
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "validateOrder")
-}
-
-func TestOrderService_ProcessOrder_InvalidJSON2(t *testing.T) {
-	repo := &mocks.Database{}
-	cache := &mocks.Cache{}
-	logger := zap.NewNop()
-
-	svc := order_service.New(repo, cache, logger)
-	ctx := context.Background()
-
-	order := createValidOrder()
-	order.Items = nil
-	jsonData, _ := json.Marshal(order)
-
-	err := svc.ProcessOrder(ctx, jsonData)
-
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "items не может быть пустым")
-}
-
 func TestOrderService_ProcessOrder_Duplicate(t *testing.T) {
 	repo := &mocks.Database{}
 	cache := &mocks.Cache{}
@@ -104,9 +64,9 @@ func TestOrderService_ProcessOrder_Duplicate(t *testing.T) {
 
 	svc := order_service.New(repo, cache, logger)
 	ctx := context.Background()
-	orderData := createOrderJSON()
-	existingOrder := createValidOrder()
+	orderData := createValidOrder()
 
+	existingOrder := createValidOrder()
 	repo.On("Read", ctx, "test-123").Return(existingOrder, nil)
 
 	err := svc.ProcessOrder(ctx, orderData)

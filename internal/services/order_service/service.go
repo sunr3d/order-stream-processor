@@ -2,7 +2,6 @@ package order_service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"go.uber.org/zap"
@@ -28,26 +27,13 @@ func New(repo infra.Database, cache infra.Cache, logger *zap.Logger) services.Or
 	}
 }
 
-func (s *orderService) ProcessOrder(ctx context.Context, data []byte) error {
+func (s *orderService) ProcessOrder(ctx context.Context, order *models.Order) error {
 	logger := s.logger.With(
 		zap.String("op", "order_service.ProcessOrder"),
+		zap.String("order_uid", order.OrderUID),
 	)
 
-	// Парсинг JSON
-	var order models.Order
-	if err := json.Unmarshal(data, &order); err != nil {
-		logger.Error("ошибка при парсинге заказа", zap.Error(err))
-		return fmt.Errorf("json.Unmarshal: %w", err)
-	}
-
-	logger = logger.With(zap.String("order_uid", order.OrderUID))
-	logger.Info("обработка заказа")
-
-	// Валидация заказа
-	if err := s.validateOrderJSON(&order); err != nil {
-		logger.Error("ошибка при валидации заказа", zap.Error(err))
-		return fmt.Errorf("validateOrder: %w", err)
-	}
+	logger.Info("начинаем обработку заказа")
 
 	// Проверка на дубликат в БД
 	exists, err := s.repo.Read(ctx, order.OrderUID)
@@ -61,13 +47,13 @@ func (s *orderService) ProcessOrder(ctx context.Context, data []byte) error {
 	}
 
 	// Сохранение заказа в БД
-	if err := s.repo.Create(ctx, &order); err != nil {
+	if err := s.repo.Create(ctx, order); err != nil {
 		logger.Error("ошибка при сохранении заказа в базе данных", zap.Error(err))
 		return fmt.Errorf("repo.Create: %w", err)
 	}
 
 	// Сохранение заказа в кэш
-	if err := s.cache.Set(ctx, order.OrderUID, &order); err != nil {
+	if err := s.cache.Set(ctx, order.OrderUID, order); err != nil {
 		logger.Warn("ошибка при сохранении заказа в кэше", zap.Error(err))
 	}
 
@@ -130,43 +116,4 @@ func (s *orderService) GetAllOrders(ctx context.Context) ([]*models.Order, error
 		zap.Int("count", len(orders)),
 	)
 	return orders, nil
-}
-
-// Вспомогательные функции
-// Валидация заказа (только основные поля, можно расширить по мере необходимости)
-func (s *orderService) validateOrderJSON(order *models.Order) error {
-	// Основные поля
-	if order.OrderUID == "" {
-		return fmt.Errorf("order_uid не может быть пустым")
-	}
-	if order.CustomerID == "" {
-		return fmt.Errorf("customer_id не может быть пустым")
-	}
-	if len(order.Items) == 0 {
-		return fmt.Errorf("items не может быть пустым")
-	}
-	if order.TrackNumber == "" {
-		return fmt.Errorf("track_number не может быть пустым")
-	}
-
-	// Поля доставки
-	if order.Delivery.Name == "" {
-		return fmt.Errorf("delivery.name не может быть пустым")
-	}
-
-	// Поля платежа
-	if order.Payment.Transaction == "" {
-		return fmt.Errorf("payment.transaction не может быть пустым")
-	}
-	if order.Payment.Provider == "" {
-		return fmt.Errorf("payment.provider не может быть пустым")
-	}
-	if order.Payment.Amount <= 0 {
-		return fmt.Errorf("payment.amount не может быть меньше или равно 0")
-	}
-	if order.Payment.PaymentDT <= 0 {
-		return fmt.Errorf("payment.payment_dt не может быть меньше или равно 0")
-	}
-
-	return nil
 }
