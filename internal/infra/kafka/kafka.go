@@ -15,30 +15,38 @@ import (
 var _ infra.Broker = (*kafkaBroker)(nil)
 
 type kafkaBroker struct {
+	client    sarama.Client
 	consumers sarama.ConsumerGroup
+	handler   func(context.Context, []byte) error
 	config    config.KafkaConfig
-	handler   func([]byte) error
 	logger    *zap.Logger
 }
 
-func New(cfg config.KafkaConfig, handler func([]byte) error, logger *zap.Logger) (infra.Broker, error) {
+func New(cfg config.KafkaConfig, logger *zap.Logger) (infra.Broker, error) {
 	config := sarama.NewConfig()
 	config.Consumer.Offsets.Initial = sarama.OffsetOldest
 
-	consumers, err := sarama.NewConsumerGroup(cfg.Brokers, cfg.GroupID, config)
+	client, err := sarama.NewClient(cfg.Brokers, config)
 	if err != nil {
+		logger.Error("ошибка подключения к Kafka", zap.Error(err))
+		return nil, fmt.Errorf("не удалось подключиться к Kafka: %w", err)
+	}
+
+	consumers, err := sarama.NewConsumerGroupFromClient(cfg.GroupID, client)
+	if err != nil {
+		client.Close()
 		return nil, fmt.Errorf("не удалось создать consumer group: %w", err)
 	}
 
 	return &kafkaBroker{
+		client:    client,
 		consumers: consumers,
 		config:    cfg,
-		handler:   handler,
 		logger:    logger,
 	}, nil
 }
 
-func (b *kafkaBroker) Start(ctx context.Context) error {
+func (b *kafkaBroker) StartConsumer(ctx context.Context) error {
 	logger := b.logger.With(
 		zap.String("op", "kafka.Start"),
 	)
@@ -79,7 +87,12 @@ func (b *kafkaBroker) Stop() error {
 		zap.String("brokers", strings.Join(b.config.Brokers, ", ")),
 	)
 
-	return b.consumers.Close()
+	b.consumers.Close()
+	return b.client.Close()
+}
+
+func (b *kafkaBroker) SetHandler(handler func(context.Context, []byte) error) {
+	b.handler = handler
 }
 
 func (b *kafkaBroker) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
@@ -95,7 +108,7 @@ func (b *kafkaBroker) ConsumeClaim(session sarama.ConsumerGroupSession, claim sa
 		)
 
 		for attempt := 1; attempt <= b.config.MaxRetries; attempt++ {
-			if err := b.handler(msg.Value); err != nil {
+			if err := b.handler(session.Context(), msg.Value); err != nil {
 				logger.Error("ошибка при обработке сообщения",
 					zap.Int32("partition", msg.Partition),
 					zap.Int64("offset", msg.Offset),

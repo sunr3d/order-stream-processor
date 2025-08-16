@@ -40,13 +40,13 @@ func createValidOrder() *models.Order {
 func TestOrderService_ProcessOrder_OK(t *testing.T) {
 	repo := &mocks.Database{}
 	cache := &mocks.Cache{}
+	broker := &mocks.Broker{}
 	logger := zap.NewNop()
 
-	svc := order_service.New(repo, cache, logger)
+	svc := order_service.New(repo, cache, broker, logger)
 	ctx := context.Background()
 	orderData := createValidOrder()
 
-	repo.On("Read", ctx, "test-123").Return((*models.Order)(nil), nil)
 	repo.On("Create", ctx, mock.AnythingOfType("*models.Order")).Return(nil)
 	cache.On("Set", ctx, "test-123", mock.AnythingOfType("*models.Order")).Return(nil)
 
@@ -60,14 +60,14 @@ func TestOrderService_ProcessOrder_OK(t *testing.T) {
 func TestOrderService_ProcessOrder_Duplicate(t *testing.T) {
 	repo := &mocks.Database{}
 	cache := &mocks.Cache{}
+	broker := &mocks.Broker{}
 	logger := zap.NewNop()
 
-	svc := order_service.New(repo, cache, logger)
+	svc := order_service.New(repo, cache, broker, logger)
 	ctx := context.Background()
 	orderData := createValidOrder()
 
-	existingOrder := createValidOrder()
-	repo.On("Read", ctx, "test-123").Return(existingOrder, nil)
+	repo.On("Create", ctx, mock.AnythingOfType("*models.Order")).Return(errors.New("заказ уже существует в базе данных"))
 
 	err := svc.ProcessOrder(ctx, orderData)
 
@@ -80,13 +80,13 @@ func TestOrderService_ProcessOrder_Duplicate(t *testing.T) {
 func TestOrderService_ProcessOrder_Error_Cache(t *testing.T) {
 	repo := &mocks.Database{}
 	cache := &mocks.Cache{}
+	broker := &mocks.Broker{}
 	logger := zap.NewNop()
 
-	svc := order_service.New(repo, cache, logger)
+	svc := order_service.New(repo, cache, broker, logger)
 	ctx := context.Background()
 	orderData := createValidOrder()
 
-	repo.On("Read", ctx, "test-123").Return((*models.Order)(nil), nil)
 	repo.On("Create", ctx, mock.AnythingOfType("*models.Order")).Return(errors.New("ошибка"))
 
 	err := svc.ProcessOrder(ctx, orderData)
@@ -97,32 +97,14 @@ func TestOrderService_ProcessOrder_Error_Cache(t *testing.T) {
 	cache.AssertNotCalled(t, "Set")
 }
 
-func TestOrderService_ProcessOrder_Error_DB(t *testing.T) {
-	repo := &mocks.Database{}
-	cache := &mocks.Cache{}
-	logger := zap.NewNop()
-
-	svc := order_service.New(repo, cache, logger)
-	ctx := context.Background()
-	orderData := createValidOrder()
-
-	repo.On("Read", ctx, "test-123").Return((*models.Order)(nil), errors.New("ошибка БД"))
-
-	err := svc.ProcessOrder(ctx, orderData)
-
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "repo.Read")
-	repo.AssertExpectations(t)
-	cache.AssertNotCalled(t, "Set")
-}
-
 // GetOrder Tests
 func TestOrderSerivce_GetOrder_OK_FromDB(t *testing.T) {
 	repo := &mocks.Database{}
 	cache := &mocks.Cache{}
+	broker := &mocks.Broker{}
 	logger := zap.NewNop()
 
-	svc := order_service.New(repo, cache, logger)
+	svc := order_service.New(repo, cache, broker, logger)
 	ctx := context.Background()
 	expectedOrder := createValidOrder()
 
@@ -141,9 +123,10 @@ func TestOrderSerivce_GetOrder_OK_FromDB(t *testing.T) {
 func TestOrderSerivce_GetOrder_OK_FromCache(t *testing.T) {
 	repo := &mocks.Database{}
 	cache := &mocks.Cache{}
+	broker := &mocks.Broker{}
 	logger := zap.NewNop()
 
-	svc := order_service.New(repo, cache, logger)
+	svc := order_service.New(repo, cache, broker, logger)
 	ctx := context.Background()
 	expectedOrder := createValidOrder()
 
@@ -160,9 +143,10 @@ func TestOrderSerivce_GetOrder_OK_FromCache(t *testing.T) {
 func TestOrderSerivce_GetOrder_NotFound(t *testing.T) {
 	repo := &mocks.Database{}
 	cache := &mocks.Cache{}
+	broker := &mocks.Broker{}
 	logger := zap.NewNop()
 
-	svc := order_service.New(repo, cache, logger)
+	svc := order_service.New(repo, cache, broker, logger)
 	ctx := context.Background()
 
 	cache.On("Get", ctx, "test-123").Return((*models.Order)(nil), errors.New("заказ не найден"))
@@ -181,9 +165,10 @@ func TestOrderSerivce_GetOrder_NotFound(t *testing.T) {
 func TestOrderSerivce_GetAllOrders_OK(t *testing.T) {
 	repo := &mocks.Database{}
 	cache := &mocks.Cache{}
+	broker := &mocks.Broker{}
 	logger := zap.NewNop()
 
-	svc := order_service.New(repo, cache, logger)
+	svc := order_service.New(repo, cache, broker, logger)
 	ctx := context.Background()
 
 	expectedOrders := []*models.Order{
@@ -207,9 +192,10 @@ func TestOrderSerivce_GetAllOrders_OK(t *testing.T) {
 func TestOrderSerivce_GetAllOrders_OK_Empty(t *testing.T) {
 	repo := &mocks.Database{}
 	cache := &mocks.Cache{}
+	broker := &mocks.Broker{}
 	logger := zap.NewNop()
 
-	svc := order_service.New(repo, cache, logger)
+	svc := order_service.New(repo, cache, broker, logger)
 	ctx := context.Background()
 
 	repo.On("ReadAll", ctx).Return([]*models.Order{}, nil)
@@ -226,9 +212,10 @@ func TestOrderSerivce_GetAllOrders_OK_Empty(t *testing.T) {
 func TestOrderSerivce_GetAllOrders_Error_DB(t *testing.T) {
 	repo := &mocks.Database{}
 	cache := &mocks.Cache{}
+	broker := &mocks.Broker{}
 	logger := zap.NewNop()
 
-	svc := order_service.New(repo, cache, logger)
+	svc := order_service.New(repo, cache, broker, logger)
 	ctx := context.Background()
 
 	repo.On("ReadAll", ctx).Return(([]*models.Order)(nil), errors.New("ошибка БД"))
@@ -245,9 +232,10 @@ func TestOrderSerivce_GetAllOrders_Error_DB(t *testing.T) {
 func TestOrderSerivce_GetAllOrders_Error_Cache(t *testing.T) {
 	repo := &mocks.Database{}
 	cache := &mocks.Cache{}
+	broker := &mocks.Broker{}
 	logger := zap.NewNop()
 
-	svc := order_service.New(repo, cache, logger)
+	svc := order_service.New(repo, cache, broker, logger)
 	ctx := context.Background()
 
 	expectedOrders := []*models.Order{
@@ -267,4 +255,84 @@ func TestOrderSerivce_GetAllOrders_Error_Cache(t *testing.T) {
 	assert.Equal(t, expectedOrders, orders)
 	repo.AssertExpectations(t)
 	cache.AssertExpectations(t)
+}
+
+// StartConsumer Tests
+func TestOrderService_StartConsumer_OK(t *testing.T) {
+	repo := &mocks.Database{}
+	cache := &mocks.Cache{}
+	broker := &mocks.Broker{}
+	logger := zap.NewNop()
+
+	svc := order_service.New(repo, cache, broker, logger)
+	ctx := context.Background()
+
+	broker.On("SetHandler", mock.Anything).Return()
+	broker.On("StartConsumer", ctx).Return(nil)
+
+	err := svc.StartConsumer(ctx)
+
+	assert.NoError(t, err)
+	broker.AssertExpectations(t)
+}
+
+func TestOrderService_StartConsumer_Error(t *testing.T) {
+	repo := &mocks.Database{}
+	cache := &mocks.Cache{}
+	broker := &mocks.Broker{}
+	logger := zap.NewNop()
+
+	svc := order_service.New(repo, cache, broker, logger)
+	ctx := context.Background()
+
+	broker.On("SetHandler", mock.Anything).Return()
+	broker.On("StartConsumer", ctx).Return(errors.New("broker.StartConsumer"))
+
+	err := svc.StartConsumer(ctx)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "broker.StartConsumer")
+	broker.AssertExpectations(t)
+}
+
+func TestOrderService_StartConsumer_Error_Context(t *testing.T) {
+	repo := &mocks.Database{}
+	cache := &mocks.Cache{}
+	broker := &mocks.Broker{}
+	logger := zap.NewNop()
+
+	svc := order_service.New(repo, cache, broker, logger)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	broker.On("SetHandler", mock.Anything).Return()
+	broker.On("StartConsumer", ctx).Return(context.Canceled)
+
+	err := svc.StartConsumer(ctx)
+
+	assert.Error(t, err)
+	assert.Equal(t, context.Canceled, err)
+	broker.AssertExpectations(t)
+	broker.AssertNotCalled(t, "SetHandler")
+}
+
+func TestOrderService_StartConsumer_Error_Timeout(t *testing.T) {
+	repo := &mocks.Database{}
+	cache := &mocks.Cache{}
+	broker := &mocks.Broker{}
+	logger := zap.NewNop()
+
+	svc := order_service.New(repo, cache, broker, logger)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)
+	defer cancel()
+
+	broker.On("SetHandler", mock.Anything).Return()
+	broker.On("StartConsumer", ctx).Return(context.DeadlineExceeded)
+
+	err := svc.StartConsumer(ctx)
+
+	assert.Error(t, err)
+	assert.Equal(t, context.DeadlineExceeded, err)
+	broker.AssertExpectations(t)
+	broker.AssertNotCalled(t, "SetHandler")
 }

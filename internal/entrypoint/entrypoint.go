@@ -13,6 +13,7 @@ import (
 	"github.com/sunr3d/order-stream-processor/internal/api"
 	"github.com/sunr3d/order-stream-processor/internal/config"
 	"github.com/sunr3d/order-stream-processor/internal/infra/inmem"
+	"github.com/sunr3d/order-stream-processor/internal/infra/kafka"
 	"github.com/sunr3d/order-stream-processor/internal/infra/postgres"
 	"github.com/sunr3d/order-stream-processor/internal/interfaces/infra"
 	"github.com/sunr3d/order-stream-processor/internal/middleware"
@@ -29,6 +30,7 @@ func Run(cfg *config.Config, logger *zap.Logger) error {
 	// Инфра слой
 	db, err := postgres.New(cfg.Postgres, logger)
 	if err != nil {
+		logger.Error("ошибка при подключении к БД", zap.Error(err))
 		return fmt.Errorf("postgres.New(): %w", err)
 	}
 	defer func(db infra.Database) {
@@ -43,8 +45,27 @@ func Run(cfg *config.Config, logger *zap.Logger) error {
 
 	cache := inmem.New(logger)
 
+	broker, err := kafka.New(cfg.Kafka, logger)
+	if err != nil {
+		logger.Error("ошибка при подключении к Kafka", zap.Error(err))
+		return fmt.Errorf("kafka.New(): %w", err)
+	}
+	defer func(broker infra.Broker) {
+		if stopper, ok := broker.(interface{ Stop() error }); ok {
+			if err := stopper.Stop(); err != nil {
+				logger.Error("ошибка при закрытии соединения с Kafka", zap.Error(err))
+			} else {
+				logger.Info("соединение с Kafka закрыто")
+			}
+		}
+	}(broker)
+
 	// Сервисный слой
-	svc := order_service.New(db, cache, logger)
+	svc := order_service.New(db, cache, broker, logger)
+	if err := svc.StartConsumer(appCtx); err != nil {
+		logger.Error("ошибка при запуске потребителя Kafka", zap.Error(err))
+		return fmt.Errorf("svc.StartConsumer(): %w", err)
+	}
 
 	// API слой
 	controller := api.New(svc, logger)
