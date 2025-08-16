@@ -105,6 +105,7 @@ func (b *kafkaBroker) ConsumeClaim(session sarama.ConsumerGroupSession, claim sa
 			zap.String("key (order_uid)", string(msg.Key)),
 		)
 
+		var processingErr error
 		for attempt := 1; attempt <= b.config.MaxRetries; attempt++ {
 			if err := b.handler(session.Context(), msg.Value); err != nil {
 				logger.Error("ошибка при обработке сообщения",
@@ -116,9 +117,11 @@ func (b *kafkaBroker) ConsumeClaim(session sarama.ConsumerGroupSession, claim sa
 					zap.Error(err),
 				)
 
+				processingErr = err
+
 				if attempt == b.config.MaxRetries {
 					session.MarkMessage(msg, "")
-					logger.Warn("превышено количество попыток обработки сообщения, сообщение будет пропущено",
+					logger.Warn("превышено количество попыток обработки сообщения",
 						zap.Int32("partition", msg.Partition),
 						zap.Int64("offset", msg.Offset),
 						zap.String("key (order_uid)", string(msg.Key)),
@@ -127,16 +130,27 @@ func (b *kafkaBroker) ConsumeClaim(session sarama.ConsumerGroupSession, claim sa
 
 				continue
 			} else {
+
+				processingErr = nil
 				break
 			}
 		}
 
 		session.MarkMessage(msg, "")
-		logger.Info("сообщение обработано успешно",
-			zap.Int32("partition", msg.Partition),
-			zap.Int64("offset", msg.Offset),
-			zap.String("key (order_uid)", string(msg.Key)),
-		)
+
+		if processingErr != nil {
+			logger.Info("сообщение пропущено",
+				zap.Int32("partition", msg.Partition),
+				zap.Int64("offset", msg.Offset),
+				zap.Error(processingErr),
+			)
+		} else {
+			logger.Info("сообщение обработано успешно",
+				zap.Int32("partition", msg.Partition),
+				zap.Int64("offset", msg.Offset),
+				zap.String("key (order_uid)", string(msg.Key)),
+			)
+		}
 	}
 
 	return nil
