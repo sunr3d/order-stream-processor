@@ -67,13 +67,20 @@ func (r *postgresRepo) Create(ctx context.Context, order *models.Order) error {
 
 	logger.Info("сохранение заказа в БД...")
 
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		logger.Error("ошибка при создании транзакции", zap.Error(err))
+		return fmt.Errorf("db.BeginTx: %w", err)
+	}
+	defer tx.Rollback()
+
 	data, err := json.Marshal(order)
 	if err != nil {
 		logger.Error("ошибка при маршалинге заказа", zap.Error(err))
 		return fmt.Errorf("json.Marshal: %w", err)
 	}
 
-	_, err = r.db.ExecContext(ctx, queryCreate, order.OrderUID, data)
+	_, err = tx.ExecContext(ctx, queryCreate, order.OrderUID, data)
 	if err != nil {
 		if strings.Contains(err.Error(), "duplicate key") {
 			logger.Info("заказ уже существует в БД")
@@ -84,7 +91,7 @@ func (r *postgresRepo) Create(ctx context.Context, order *models.Order) error {
 	}
 
 	logger.Info("заказ успешно сохранен в БД")
-	return nil
+	return tx.Commit()
 }
 
 func (r *postgresRepo) Read(ctx context.Context, orderUID string) (*models.Order, error) {

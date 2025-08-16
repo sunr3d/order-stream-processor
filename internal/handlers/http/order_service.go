@@ -1,4 +1,4 @@
-package api
+package http_handlers
 
 import (
 	"encoding/json"
@@ -8,25 +8,11 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/sunr3d/order-stream-processor/internal/handlers/validators"
 	"github.com/sunr3d/order-stream-processor/internal/httpx"
-	"github.com/sunr3d/order-stream-processor/internal/interfaces/services"
 )
 
-type handler struct {
-	svc    services.OrderService
-	logger *zap.Logger
-}
-
-func New(svc services.OrderService, logger *zap.Logger) *handler {
-	return &handler{svc: svc, logger: logger}
-}
-
-func (h *handler) RegisterOrderHandlers(mux *http.ServeMux) {
-	mux.HandleFunc("POST /order", h.createOrder)
-	mux.HandleFunc("GET /order/{order_uid}", h.getOrder)
-}
-
-func (h *handler) createOrder(w http.ResponseWriter, r *http.Request) {
+func (h *httpHandler) createOrder(w http.ResponseWriter, r *http.Request) {
 	logger := h.logger.With(zap.String("op", "handlers.createOrder"))
 
 	logger.Info("получен запрос на создание заказа")
@@ -41,7 +27,7 @@ func (h *handler) createOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validateCreateOrderReq(req); err != nil {
+	if err := validators.ValidateOrder(&req); err != nil {
 		logger.Error("ошибка валидации запроса", zap.Error(err))
 		_ = httpx.HttpError(w, http.StatusBadRequest, err.Error())
 		return
@@ -80,7 +66,7 @@ func (h *handler) createOrder(w http.ResponseWriter, r *http.Request) {
 	logger.Info("заказ успешно создан")
 }
 
-func (h *handler) getOrder(w http.ResponseWriter, r *http.Request) {
+func (h *httpHandler) getOrder(w http.ResponseWriter, r *http.Request) {
 	logger := h.logger.With(zap.String("op", "handlers.getOrder"))
 
 	logger.Info("получен запрос на получение заказа")

@@ -11,6 +11,4 @@ type OrderService interface {
 	ProcessOrder(ctx context.Context, order *models.Order) error
 	GetOrder(ctx context.Context, orderUID string) (*models.Order, error)
 	GetAllOrders(ctx context.Context) ([]*models.Order, error)
-
-	StartConsumer(ctx context.Context) error
 }

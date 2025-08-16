@@ -2,7 +2,6 @@ package order_service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -16,17 +15,17 @@ import (
 var _ services.OrderService = (*orderService)(nil)
 
 type orderService struct {
-	repo   infra.Database
-	cache  infra.Cache
-	broker infra.Broker
+	repo  infra.Database
+	cache infra.Cache
+	// broker infra.Broker
 	logger *zap.Logger
 }
 
-func New(repo infra.Database, cache infra.Cache, broker infra.Broker, logger *zap.Logger) services.OrderService {
+func New(repo infra.Database, cache infra.Cache, logger *zap.Logger) services.OrderService {
 	return &orderService{
-		repo:   repo,
-		cache:  cache,
-		broker: broker,
+		repo:  repo,
+		cache: cache,
+		// broker: broker,
 		logger: logger,
 	}
 }
@@ -113,29 +112,4 @@ func (s *orderService) GetAllOrders(ctx context.Context) ([]*models.Order, error
 		zap.Int("count", len(orders)),
 	)
 	return orders, nil
-}
-
-func (s *orderService) StartConsumer(ctx context.Context) error {
-	s.broker.SetHandler(s.handleKafkaMessage)
-	return s.broker.StartConsumer(ctx)
-}
-
-func (s *orderService) handleKafkaMessage(ctx context.Context, message []byte) error {
-	logger := s.logger.With(
-		zap.String("op", "order_service.handleKafkaMessage"),
-	)
-
-	var order models.Order
-	if err := json.Unmarshal(message, &order); err != nil {
-		logger.Error("ошибка при разборе сообщения из Kafka", zap.Error(err))
-		return fmt.Errorf("json.Unmarshal: %w", err)
-	}
-
-	if err := s.ProcessOrder(ctx, &order); err != nil {
-		logger.Error("ошибка при обработке заказа", zap.Error(err))
-		return fmt.Errorf("order_service.ProcessOrder: %w", err)
-	}
-
-	logger.Info("заказ успешно обработан")
-	return nil
 }

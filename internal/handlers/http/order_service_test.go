@@ -1,4 +1,4 @@
-package api_test
+package http_handlers_test
 
 import (
 	"bytes"
@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
 
-	"github.com/sunr3d/order-stream-processor/internal/api"
+	http_handlers "github.com/sunr3d/order-stream-processor/internal/handlers/http"
 	"github.com/sunr3d/order-stream-processor/mocks"
 	"github.com/sunr3d/order-stream-processor/models"
 )
@@ -43,7 +43,7 @@ func createValidOrder() *models.Order {
 func TestHandler_CreateOrder_OK(t *testing.T) {
 	svc := &mocks.OrderService{}
 	logger := zap.NewNop()
-	controller := api.New(svc, logger)
+	controller := http_handlers.New(svc, logger)
 
 	orderData := createValidOrder()
 	jsonData, err := json.Marshal(orderData)
@@ -75,7 +75,7 @@ func TestHandler_CreateOrder_OK(t *testing.T) {
 func TestHandler_CreateOrder_Error_InvalidJSON(t *testing.T) {
 	svc := &mocks.OrderService{}
 	logger := zap.NewNop()
-	controller := api.New(svc, logger)
+	controller := http_handlers.New(svc, logger)
 
 	mux := http.NewServeMux()
 	controller.RegisterOrderHandlers(mux)
@@ -99,7 +99,7 @@ func TestHandler_CreateOrder_Error_InvalidJSON(t *testing.T) {
 func TestHandler_CreateOrder_Error_Validation(t *testing.T) {
 	svc := &mocks.OrderService{}
 	logger := zap.NewNop()
-	controller := api.New(svc, logger)
+	controller := http_handlers.New(svc, logger)
 
 	orderData := createValidOrder()
 	orderData.OrderUID = ""
@@ -127,7 +127,7 @@ func TestHandler_CreateOrder_Error_Validation(t *testing.T) {
 func TestHandler_CreateOrder_Error_Duplicate(t *testing.T) {
 	svc := &mocks.OrderService{}
 	logger := zap.NewNop()
-	controller := api.New(svc, logger)
+	controller := http_handlers.New(svc, logger)
 
 	orderData := createValidOrder()
 	jsonData, _ := json.Marshal(orderData)
@@ -157,7 +157,7 @@ func TestHandler_CreateOrder_Error_Duplicate(t *testing.T) {
 func TestHandler_GetOrder_OK(t *testing.T) {
 	svc := &mocks.OrderService{}
 	logger := zap.NewNop()
-	controller := api.New(svc, logger)
+	controller := http_handlers.New(svc, logger)
 
 	expectedOrder := createValidOrder()
 
@@ -190,7 +190,7 @@ func TestHandler_GetOrder_OK(t *testing.T) {
 func TestHandler_GetOrder_Error_NotFound(t *testing.T) {
 	svc := &mocks.OrderService{}
 	logger := zap.NewNop()
-	controller := api.New(svc, logger)
+	controller := http_handlers.New(svc, logger)
 
 	svc.On("GetOrder", mock.Anything, "test-123").Return((*models.Order)(nil), errors.New("заказ не найден"))
 

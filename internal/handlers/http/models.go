@@ -1,6 +1,8 @@
-package api
+package http_handlers
 
-import "github.com/sunr3d/order-stream-processor/models"
+import (
+	"github.com/sunr3d/order-stream-processor/models"
+)
 
 type createOrderReq = models.Order
 

@@ -46,7 +46,9 @@ func New(cfg config.KafkaConfig, logger *zap.Logger) (infra.Broker, error) {
 	}, nil
 }
 
-func (b *kafkaBroker) StartConsumer(ctx context.Context) error {
+func (b *kafkaBroker) StartConsumer(ctx context.Context, handler func(context.Context, []byte) error) error {
+	b.handler = handler
+
 	logger := b.logger.With(
 		zap.String("op", "kafka.Start"),
 	)
@@ -89,10 +91,6 @@ func (b *kafkaBroker) Stop() error {
 
 	b.consumers.Close()
 	return b.client.Close()
-}
-
-func (b *kafkaBroker) SetHandler(handler func(context.Context, []byte) error) {
-	b.handler = handler
 }
 
 func (b *kafkaBroker) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {

@@ -1,8 +1,3 @@
--- БД
-CREATE DATABASE IF NOT EXISTS orders;
--- Юзер + права под БД
-CREATE USER orders_user WITH PASSWORD 'orders_password';
-GRANT ALL PRIVILEGES ON DATABASE orders TO orders_user;
 -- Таблица
 CREATE TABLE IF NOT EXISTS orders (
     order_uid VARCHAR(255) PRIMARY KEY,
@@ -10,5 +5,6 @@ CREATE TABLE IF NOT EXISTS orders (
 );
 -- Индекс
 CREATE INDEX idx_orders_data ON orders USING GIN (data);
--- Права на таблицу
+-- Права пользователю
 GRANT ALL PRIVILEGES ON TABLE orders TO orders_user;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO orders_user;

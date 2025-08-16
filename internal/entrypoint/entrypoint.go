@@ -10,8 +10,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/sunr3d/order-stream-processor/internal/api"
 	"github.com/sunr3d/order-stream-processor/internal/config"
+	http_handlers "github.com/sunr3d/order-stream-processor/internal/handlers/http"
+	kafka_handlers "github.com/sunr3d/order-stream-processor/internal/handlers/kafka"
 	"github.com/sunr3d/order-stream-processor/internal/infra/inmem"
 	"github.com/sunr3d/order-stream-processor/internal/infra/kafka"
 	"github.com/sunr3d/order-stream-processor/internal/infra/postgres"
@@ -27,7 +28,7 @@ func Run(cfg *config.Config, logger *zap.Logger) error {
 	appCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	// Инфра слой
+	/// Инфра слой
 	db, err := postgres.New(cfg.Postgres, logger)
 	if err != nil {
 		logger.Error("ошибка при подключении к БД", zap.Error(err))
@@ -60,26 +61,31 @@ func Run(cfg *config.Config, logger *zap.Logger) error {
 		}
 	}(broker)
 
-	// Сервисный слой
-	svc := order_service.New(db, cache, broker, logger)
-	if err := svc.StartConsumer(appCtx); err != nil {
-		logger.Error("ошибка при запуске потребителя Kafka", zap.Error(err))
-		return fmt.Errorf("svc.StartConsumer(): %w", err)
-	}
+	/// Сервисный слой
+	svc := order_service.New(db, cache, logger)
 
-	// API слой
-	controller := api.New(svc, logger)
+	/// HTTP слой
+	controller := http_handlers.New(svc, logger)
 	mux := http.NewServeMux()
 	controller.RegisterOrderHandlers(mux)
 
-	// Middleware слой
+	// Middleware
 	handler := middleware.Recovery(logger)(
 		middleware.ReqLogger(logger)(
 			middleware.JSONValidator(logger)(mux),
 		),
 	)
 
-	// HTTP сервер
+	/// Kafka консьюмер
+	consumerHandler := kafka_handlers.New(svc, logger)
+
+	go func() {
+		if err := broker.StartConsumer(appCtx, consumerHandler.CreateOrder); err != nil {
+			logger.Error("ошибка при запуске консьюмера Kafka", zap.Error(err))
+		}
+	}()
+
+	/// HTTP сервер
 	srv := server.New(cfg.HTTPPort, handler, cfg.HTTPTimeout, logger)
 
 	return srv.Start(appCtx)
