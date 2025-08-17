@@ -23,7 +23,7 @@ curl -s "http://localhost:8081/order/b563feb7b2b84b6test" | jq .
 
 # Отправляем в Kafka еще один заказ
 echo "Отправляем в Kafka еще один заказ..."
-echo '{"order_uid": "test-2", "customer_id": "customer-2", "track_number": "TRACK-002", "items": [{"name": "Test Item 2", "price": 200, "total_price": 200}], "delivery": {"name": "User 2"}, "payment": {"transaction": "tx-2", "provider": "test", "amount": 200, "payment_dt": 1640995200}}' | docker run --rm -i --network order-stream-processor_default \
+cat data/test_1.json | tr -d '\n' | docker run --rm -i --network order-stream-processor_default \
   bitnami/kafka:latest kafka-console-producer.sh \
   --bootstrap-server kafka:9092 \
   --topic orders
@@ -34,7 +34,7 @@ sleep 5
 
 # Получаем второй заказ
 echo "📥 Получаем второй заказ..."
-curl -s "http://localhost:8081/order/test-2" | jq .
+curl -s "http://localhost:8081/order/test-1" | jq .
 
 # Рестарт сервиса
 echo "Производим рестарт сервиса..."
@@ -42,14 +42,14 @@ docker compose restart app
 
 # Ждем рестарта
 echo "⏳ Ждем рестарта..."
-sleep 10
+sleep 5
 
-# Получаем заказ
+# Получаем заказ 1
 echo "📥 Получаем заказ 1..."
 curl -s "http://localhost:8081/order/b563feb7b2b84b6test" | jq .
 
-# Получаем все заказы
+# Получаем заказ 2
 echo "📥 Получаем заказ 2..."
-curl -s "http://localhost:8081/order/test-2" | jq .
+curl -s "http://localhost:8081/order/test-1" | jq .
 
 echo "✅ Тестирование завершено!"

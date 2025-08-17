@@ -1,0 +1,75 @@
+{
+    "order_uid": "test-1",
+    "track_number": "WBILMTESTTRACK",
+    "entry": "WBIL",
+    "delivery": {
+      "name": "Иванов Иван Иванович",
+      "phone": "+79999999999",
+      "zip": "777777",
+      "city": "Москва",
+      "address": "ул. Пушкина, д. 1, кв. 1",
+      "region": "Москва",
+      "email": "ivan@example.com"
+    },
+    "payment": {
+      "transaction": "test-1-tx",
+      "request_id": "",
+      "currency": "RUB",
+      "provider": "wbpay",
+      "amount": 2500,
+      "payment_dt": 1640995200,
+      "bank": "test-bank",
+      "delivery_cost": 300,
+      "goods_total": 2200,
+      "custom_fee": 0
+    },
+    "items": [
+    {
+        "chrt_id": 123456,
+        "track_number": "WBILMTESTTRACK",
+        "price": 1000,
+        "rid": "item-1-rid",
+        "name": "Куртка зимняя",
+        "sale": 10,
+        "size": "L",
+        "total_price": 900,
+        "nm_id": 111111,
+        "brand": "Nike",
+        "status": 202
+    },
+    {
+      "chrt_id": 789012,
+      "track_number": "WBILMTESTTRACK",
+      "price": 800,
+      "rid": "item-2-rid",
+      "name": "Джинсы утепленные",
+      "sale": 0,
+      "size": "M",
+      "total_price": 800,
+      "nm_id": 222222,
+      "brand": "Levi's",
+      "status": 202
+    },
+    {
+      "chrt_id": 345678,
+      "track_number": "WBILMTESTTRACK",
+      "price": 400,
+      "rid": "item-3-rid",
+      "name": "Футболка",
+      "sale": 25,
+      "size": "S",
+      "total_price": 300,
+      "nm_id": 333333,
+      "brand": "Adidas",
+      "status": 202
+    }
+  ],
+  "locale": "ru",
+  "internal_signature": "",
+  "customer_id": "customer-1",
+  "delivery_service": "test-delivery",
+  "shardkey": "1",
+  "sm_id": 99,
+  "date_created": "2024-01-15T10:30:00Z",
+  "oof_shard": "1"
+}
