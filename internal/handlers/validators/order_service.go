@@ -15,11 +15,11 @@ func ValidateOrder(order *models.Order) error {
 	if strings.TrimSpace(order.CustomerID) == "" {
 		return fmt.Errorf("customer_id не может быть пустым")
 	}
-	if len(order.Items) == 0 {
-		return fmt.Errorf("items не может быть пустым")
-	}
 	if strings.TrimSpace(order.TrackNumber) == "" {
 		return fmt.Errorf("track_number не может быть пустым")
+	}
+	if strings.TrimSpace(order.DeliveryService) == "" {
+		return fmt.Errorf("delivery_service не может быть пустым")
 	}
 	if order.DateCreated.IsZero() {
 		return fmt.Errorf("date_created не может быть пустым")
@@ -65,5 +65,40 @@ func ValidateOrder(order *models.Order) error {
 		return fmt.Errorf("payment.payment_dt не может быть меньше или равно 0")
 	}
 
+	// Проверяем товары
+	if err := validateItems(order.Items); err != nil {
+		return fmt.Errorf("validateItems: %w", err)
+	}
+
+	return nil
+}
+
+func validateItems(items []models.Item) error {
+	if len(items) == 0 {
+		return fmt.Errorf("items не может быть пустым")
+	}
+	for i, item := range items {
+		if item.ChrtID <= 0 {
+			return fmt.Errorf("items[%d].chrt_id не может быть меньше или равно 0", i)
+		}
+		if strings.TrimSpace(item.Name) == "" {
+			return fmt.Errorf("items[%d].name не может быть пустым", i)
+		}
+		if strings.TrimSpace(item.Brand) == "" {
+			return fmt.Errorf("items[%d].brand не может быть пустым", i)
+		}
+		if strings.TrimSpace(item.Size) == "" {
+			return fmt.Errorf("items[%d].size не может быть пустым", i)
+		}
+		if item.Price <= 0 {
+			return fmt.Errorf("items[%d].price не может быть меньше или равно 0", i)
+		}
+		if item.Sale < 0 {
+			return fmt.Errorf("items[%d].sale не может быть меньше 0", i)
+		}
+		if item.TotalPrice <= 0 {
+			return fmt.Errorf("items[%d].total_price не может быть меньше или равно 0", i)
+		}
+	}
 	return nil
 }

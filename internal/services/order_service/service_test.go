@@ -17,21 +17,46 @@ import (
 
 func createValidOrder() *models.Order {
 	return &models.Order{
-		OrderUID:    "test-123",
-		CustomerID:  "customer-123",
-		TrackNumber: "TRACK-123",
+		OrderUID:        "test-123",
+		CustomerID:      "customer-123",
+		TrackNumber:     "TRACK-123",
+		DeliveryService: "test-delivery-service",
+		DateCreated:     time.Now().AddDate(0, 0, -1),
 		Items: []models.Item{
-			{Name: "Test Item 1", Price: 100, TotalPrice: 100},
-			{Name: "Test Item 2", Price: 200, TotalPrice: 200},
+			{
+				ChrtID:     12345,
+				Name:       "Test Item 1",
+				Brand:      "Test Brand",
+				Size:       "M",
+				Price:      100,
+				Sale:       0,
+				TotalPrice: 100,
+			},
+			{
+				ChrtID:     67890,
+				Name:       "Test Item 2",
+				Brand:      "Test Brand 2",
+				Size:       "L",
+				Price:      200,
+				Sale:       10,
+				TotalPrice: 180,
+			},
 		},
 		Delivery: models.Delivery{
-			Name: "Test User",
+			Name:    "Test User",
+			Phone:   "1234567890",
+			Email:   "test@test.com",
+			City:    "Test City",
+			Address: "Test Address",
 		},
 		Payment: models.Payment{
-			Transaction: "transaction-123",
-			Provider:    "test-provider",
-			Amount:      300,
-			PaymentDT:   time.Now().Unix(),
+			Transaction:  "transaction-123",
+			Provider:     "test-provider",
+			GoodsTotal:   280,
+			DeliveryCost: 50,
+			CustomFee:    10,
+			Amount:       340,
+			PaymentDT:    time.Now().Unix(),
 		},
 	}
 }
