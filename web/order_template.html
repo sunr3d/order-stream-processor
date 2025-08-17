@@ -1,0 +1,25 @@
+<h2>Заказ {{order_uid}}</h2>
+<h3>Основная информация:</h3>
+<p>ID клиента: {{customer_id}}</p>
+<p>Номер отслеживания: {{track_number}}</p>
+<p>Сервис доставки: {{delivery_service}}</p>
+<p>Дата создания: {{date_created}}</p>
+
+<h3>Доставка:</h3>
+<p>Получатель: {{delivery_name}}</p>
+<p>Телефон: {{delivery_phone}}</p>
+<p>Email: {{delivery_email}}</p>
+<p>Город: {{delivery_city}}</p>
+<p>Адрес: {{delivery_address}}</p>
+
+<h3>Информация об оплате:</h3>
+<p>№ транзакции: {{payment_transaction}}</p>
+<p>Провайдер платежа: {{payment_provider}}</p>
+<p>Цена товаров: {{payment_goods_total}} руб.</p>
+<p>Стоимость доставки: {{payment_delivery_cost}} руб.</p>
+<p>Комиссия: {{payment_custom_fee}} руб.</p>
+<p>Сумма к оплате: {{payment_amount}} руб.</p>
+<p>Дата платежа: {{payment_payment_dt}}</p>
+
+<h3>Товары ({{items_count}}):</h3>
+{{items_html}}
