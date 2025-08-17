@@ -17,7 +17,7 @@
       "currency": "RUB",
       "provider": "wbpay",
       "amount": 2500,
-      "payment_dt": 1640995200,
+      "payment_dt": 1705312800,
       "bank": "test-bank",
       "delivery_cost": 300,
       "goods_total": 2200,

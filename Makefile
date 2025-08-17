@@ -22,6 +22,9 @@ test:
 test-kafka:
 	./test-kafka.sh
 
+demo:
+	./demo.sh
+
 lint:
 	golangci-lint run
 
