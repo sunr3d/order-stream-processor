@@ -25,9 +25,6 @@ test-kafka:
 demo:
 	./demo.sh
 
-lint:
-	golangci-lint run
-
 fmt:
 	go fmt ./...
 
