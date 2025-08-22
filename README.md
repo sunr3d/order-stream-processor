@@ -59,7 +59,7 @@ cat data/model.json | tr -d '\n' | docker run --rm -i --network order-stream-pro
 
 http://localhost:8080 для поиска заказов через веб-интерфейс.
 
-## Архитектура
+## Структура проекта
 
 - `models/` - доменные модели сервиса
 - `internal/services/` - бизнес-логика сервиса обработки заказов
